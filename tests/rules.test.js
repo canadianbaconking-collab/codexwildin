@@ -42,3 +42,18 @@ test('rule R-DEP-001 caps runtime penalties', () => {
   assert.ok(driver, 'Expected driver for R-DEP-001');
   assert.strictEqual(driver.contribution, -30);
 });
+
+test('explainability exposes base and adjustments per metric', () => {
+  const decision = {
+    ...baseDecision,
+    scope_impact: 'local',
+    migration_cost_estimate: 'high',
+  };
+  const result = evaluateDecision(decision);
+  const explainability = result.explainability.metrics.reversibility;
+  assert.strictEqual(explainability.base, 80);
+  assert.ok(
+    explainability.adjustments.some((adjustment) => adjustment.rule_id === 'R-REV-002')
+  );
+  assert.strictEqual(explainability.final, result.scores.reversibility);
+});
