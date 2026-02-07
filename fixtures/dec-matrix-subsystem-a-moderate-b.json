@@ -1,0 +1,43 @@
+{
+  "id": "dec-matrix-subsystem-a-moderate-b",
+  "title": "Matrix subsystem-a / moderate-b",
+  "date": "2025-01-10T00:00:00.000Z",
+  "decision_type": "architecture",
+  "context": "We are aligning on a decision for the matrix fixture.",
+  "motivation": "We need a deterministic fixture to validate scoring behavior.",
+  "alternatives_considered": [
+    {
+      "name": "Alt A",
+      "why_not": "Too limited."
+    }
+  ],
+  "dependencies_introduced": [
+    {
+      "name": "dep-runtime-med",
+      "kind": "runtime",
+      "criticality": "high"
+    },
+    {
+      "name": "dep-ops-med",
+      "kind": "ops",
+      "criticality": "med"
+    },
+    {
+      "name": "dep-data-med",
+      "kind": "data",
+      "criticality": "high"
+    }
+  ],
+  "scope_impact": "subsystem",
+  "reversibility_estimate": "moderate",
+  "migration_cost_estimate": "low",
+  "time_horizon": "months",
+  "constraints": [
+    "Offline only",
+    "Deterministic output"
+  ],
+  "assumptions": [
+    "Team capacity is stable",
+    "Latency budget remains unchanged"
+  ]
+}

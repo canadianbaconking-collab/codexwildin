@@ -1,0 +1,48 @@
+{
+  "id": "dec-matrix-subsystem-b-hard-b",
+  "title": "Matrix subsystem-b / hard-b",
+  "date": "2025-01-10T00:00:00.000Z",
+  "decision_type": "architecture",
+  "context": "We are aligning on a decision for the matrix fixture.",
+  "motivation": "We need a deterministic fixture to validate scoring behavior.",
+  "alternatives_considered": [
+    {
+      "name": "Alt A",
+      "why_not": "Too limited."
+    }
+  ],
+  "dependencies_introduced": [
+    {
+      "name": "dep-runtime-heavy-a",
+      "kind": "runtime",
+      "criticality": "high"
+    },
+    {
+      "name": "dep-runtime-heavy-b",
+      "kind": "runtime",
+      "criticality": "high"
+    },
+    {
+      "name": "dep-build-heavy",
+      "kind": "build",
+      "criticality": "high"
+    },
+    {
+      "name": "dep-data-heavy",
+      "kind": "data",
+      "criticality": "high"
+    }
+  ],
+  "scope_impact": "subsystem",
+  "reversibility_estimate": "hard",
+  "migration_cost_estimate": "high",
+  "time_horizon": "years",
+  "constraints": [
+    "Offline only",
+    "Deterministic output"
+  ],
+  "assumptions": [
+    "Team capacity is stable",
+    "Latency budget remains unchanged"
+  ]
+}

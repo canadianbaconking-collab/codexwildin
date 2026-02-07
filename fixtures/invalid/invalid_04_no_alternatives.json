@@ -1,0 +1,20 @@
+{
+  "id": "dec-no-alt",
+  "title": "No alternatives",
+  "date": "2025-01-01T00:00:00.000Z",
+  "decision_type": "tooling",
+  "context": "Context.",
+  "motivation": "Motivation.",
+  "alternatives_considered": [],
+  "dependencies_introduced": [],
+  "scope_impact": "local",
+  "reversibility_estimate": "easy",
+  "migration_cost_estimate": "low",
+  "time_horizon": "days",
+  "constraints": [
+    "None"
+  ],
+  "assumptions": [
+    "None"
+  ]
+}

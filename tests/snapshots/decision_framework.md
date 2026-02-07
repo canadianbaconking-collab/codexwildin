@@ -53,14 +53,16 @@ Final: 50
 
 ## Top Drivers
 - reversibility (R-REV-002): High migration cost reduces reversibility. (-15)
-- dependency_weight (R-DEP-001): High-criticality runtime dependencies reduce dependency score. (-10)
 - convergence (R-CONV-002): Alternatives have detailed rationale, improving convergence. (10)
+- dependency_weight (R-DEP-001): High-criticality runtime dependencies reduce dependency score. (-10)
 
 ## Mitigations
 - P1: Define a rollback or escape plan with clear triggers. (reversibility)
-- P2: Limit initial deployment scope and monitor blast radius. (blast_radius)
-- P3: Reduce or tier critical dependencies where possible. (dependency_weight)
-- P4: Document rejected alternatives and revisit if assumptions change. (convergence)
+- P3: Reduce or tier critical runtime dependencies where possible. (dependency_weight)
+- P4: Summarize why rejected options were insufficient. (convergence)
+
+## Confidence Sensitivity
+- Assumption 1: Platform team can update shared middleware → Δ overall -1 (new overall 50)
 
 ---
 Generated at 2025-02-01T00:00:00.000Z

@@ -7,6 +7,9 @@ DecisionForge Lite is an offline-first, deterministic microtool that evaluates a
 - JSON report contract (`DecisionReport v0.1`) and markdown summary.
 - Explainability section with base scores, adjustments, and weighted roll-up.
 - Deterministic schema validation before scoring.
+- Plugin-ready rule registry for extending metrics deterministically.
+- Confidence sensitivity analysis for assumption flips.
+- Mitigations mapped to triggered rule IDs with deterministic fallbacks.
 - CLI-first workflow with a stub UI for future expansion.
 - Offline-first: no external APIs or telemetry.
 
@@ -55,13 +58,23 @@ node --test
   ```bash
   node --test
   ```
+- Review the 6×6 fixture matrix summary:
+  ```bash
+  cat examples/fixture-summary.md
+  ```
+
+## Fixture matrix (6×6) + adversarial invalids
+- 36 matrix fixtures live in `fixtures/dec-matrix-*.json`.
+  - The 6×6 grid uses two deterministic variants for each `scope_impact` and `reversibility_estimate` value to reach 36 fixtures total.
+- 10 adversarial invalid fixtures live in `fixtures/invalid/`.
+- A score distribution + flag frequency summary is published in `examples/fixture-summary.md`.
 
 ## Sample report outputs
 Sample reports are stored in `examples/`.
 
 ## Sample DecisionReport (JSON)
 ```json
-{"classification":"risky","drivers":[{"contribution":-15,"description":"High migration cost reduces reversibility.","metric":"reversibility","rule_id":"R-REV-002"},{"contribution":15,"description":"Considering at least three alternatives improves convergence.","metric":"convergence","rule_id":"R-CONV-001"},{"contribution":-10,"description":"High-criticality data dependency reduces reversibility.","metric":"reversibility","rule_id":"R-REV-003"},{"contribution":-10,"description":"Large number of dependencies increases blast radius risk.","metric":"blast_radius","rule_id":"R-BLAST-001"},{"contribution":-10,"description":"Architecture decisions beyond local scope increase blast radius.","metric":"blast_radius","rule_id":"R-BLAST-002"},{"contribution":-10,"description":"High-criticality runtime dependencies reduce dependency score.","metric":"dependency_weight","rule_id":"R-DEP-001"},{"contribution":-10,"description":"High-criticality data dependencies reduce dependency score.","metric":"dependency_weight","rule_id":"R-DEP-003"},{"contribution":10,"description":"Alternatives have detailed rationale, improving convergence.","metric":"convergence","rule_id":"R-CONV-002"},{"contribution":-5,"description":"High-criticality build/ops dependencies reduce dependency score.","metric":"dependency_weight","rule_id":"R-DEP-002"}],"explainability":{"metrics":{"blast_radius":{"adjustments":[{"contribution":-10,"description":"Large number of dependencies increases blast radius risk.","rule_id":"R-BLAST-001"},{"contribution":-10,"description":"Architecture decisions beyond local scope increase blast radius.","rule_id":"R-BLAST-002"}],"base":25,"final":5},"convergence":{"adjustments":[{"contribution":15,"description":"Considering at least three alternatives improves convergence.","rule_id":"R-CONV-001"},{"contribution":10,"description":"Alternatives have detailed rationale, improving convergence.","rule_id":"R-CONV-002"}],"base":40,"final":65},"dependency_weight":{"adjustments":[{"contribution":-10,"description":"High-criticality runtime dependencies reduce dependency score.","rule_id":"R-DEP-001"},{"contribution":-5,"description":"High-criticality build/ops dependencies reduce dependency score.","rule_id":"R-DEP-002"},{"contribution":-10,"description":"High-criticality data dependencies reduce dependency score.","rule_id":"R-DEP-003"}],"base":70,"final":45},"reversibility":{"adjustments":[{"contribution":-15,"description":"High migration cost reduces reversibility.","rule_id":"R-REV-002"},{"contribution":-10,"description":"High-criticality data dependency reduces reversibility.","rule_id":"R-REV-003"}],"base":25,"final":0}},"overall":{"components":[{"metric":"reversibility","score":0,"weight":0.3,"weighted":0},{"metric":"blast_radius","score":5,"weight":0.3,"weighted":1.5},{"metric":"dependency_weight","score":45,"weight":0.2,"weighted":9},{"metric":"convergence","score":65,"weight":0.2,"weighted":13}],"final":24,"weights":{"blast_radius":0.3,"convergence":0.2,"dependency_weight":0.2,"reversibility":0.3}}},"flags":[{"code":"BLAST-RISK","message":"Blast radius score is low; impact could be wide.","severity":"risk"},{"code":"REV-LOCKIN","message":"Reversibility appears low; exit strategy may be hard.","severity":"warn"}],"generated_at":"2025-02-01T00:00:00.000Z","input_id":"dec-queue-003","mitigations":[{"action":"Define a rollback or escape plan with clear triggers.","linked_metric":"reversibility","priority":1,"rationale":"Improves reversibility and reduces lock-in risk."},{"action":"Limit initial deployment scope and monitor blast radius.","linked_metric":"blast_radius","priority":2,"rationale":"Reduces impact if issues arise."},{"action":"Reduce or tier critical dependencies where possible.","linked_metric":"dependency_weight","priority":3,"rationale":"Improves dependency weight score."},{"action":"Document rejected alternatives and revisit if assumptions change.","linked_metric":"convergence","priority":4,"rationale":"Improves convergence and decision traceability."}],"scores":{"blast_radius":5,"convergence":65,"dependency_weight":45,"overall_confidence":24,"reversibility":0},"version":"0.1"}
+{"classification":"risky","drivers":[{"contribution":15,"description":"Considering at least three alternatives improves convergence.","metric":"convergence","rule_id":"R-CONV-001"},{"contribution":-15,"description":"High migration cost reduces reversibility.","metric":"reversibility","rule_id":"R-REV-002"},{"contribution":-10,"description":"Large number of dependencies increases blast radius risk.","metric":"blast_radius","rule_id":"R-BLAST-001"},{"contribution":-10,"description":"Architecture decisions beyond local scope increase blast radius.","metric":"blast_radius","rule_id":"R-BLAST-002"},{"contribution":10,"description":"Alternatives have detailed rationale, improving convergence.","metric":"convergence","rule_id":"R-CONV-002"},{"contribution":-10,"description":"High-criticality runtime dependencies reduce dependency score.","metric":"dependency_weight","rule_id":"R-DEP-001"},{"contribution":-10,"description":"High-criticality data dependencies reduce dependency score.","metric":"dependency_weight","rule_id":"R-DEP-003"},{"contribution":-10,"description":"High-criticality data dependency reduces reversibility.","metric":"reversibility","rule_id":"R-REV-003"},{"contribution":-5,"description":"High-criticality build/ops dependencies reduce dependency score.","metric":"dependency_weight","rule_id":"R-DEP-002"}],"explainability":{"metrics":{"blast_radius":{"adjustments":[{"contribution":-10,"description":"Large number of dependencies increases blast radius risk.","rule_id":"R-BLAST-001"},{"contribution":-10,"description":"Architecture decisions beyond local scope increase blast radius.","rule_id":"R-BLAST-002"}],"base":25,"final":5},"convergence":{"adjustments":[{"contribution":15,"description":"Considering at least three alternatives improves convergence.","rule_id":"R-CONV-001"},{"contribution":10,"description":"Alternatives have detailed rationale, improving convergence.","rule_id":"R-CONV-002"}],"base":40,"final":65},"dependency_weight":{"adjustments":[{"contribution":-10,"description":"High-criticality runtime dependencies reduce dependency score.","rule_id":"R-DEP-001"},{"contribution":-5,"description":"High-criticality build/ops dependencies reduce dependency score.","rule_id":"R-DEP-002"},{"contribution":-10,"description":"High-criticality data dependencies reduce dependency score.","rule_id":"R-DEP-003"}],"base":70,"final":45},"reversibility":{"adjustments":[{"contribution":-15,"description":"High migration cost reduces reversibility.","rule_id":"R-REV-002"},{"contribution":-10,"description":"High-criticality data dependency reduces reversibility.","rule_id":"R-REV-003"}],"base":25,"final":0}},"overall":{"components":[{"metric":"reversibility","score":0,"weight":0.3,"weighted":0},{"metric":"blast_radius","score":5,"weight":0.3,"weighted":1.5},{"metric":"dependency_weight","score":45,"weight":0.2,"weighted":9},{"metric":"convergence","score":65,"weight":0.2,"weighted":13}],"final":24,"weights":{"blast_radius":0.3,"convergence":0.2,"dependency_weight":0.2,"reversibility":0.3}}},"flags":[{"code":"BLAST-RISK","message":"Blast radius score is low; impact could be wide.","severity":"risk"},{"code":"REV-LOCKIN","message":"Reversibility appears low; exit strategy may be hard.","severity":"warn"}],"generated_at":"2025-02-01T00:00:00.000Z","input_id":"dec-queue-003","mitigations":[{"action":"Define a rollback or escape plan with clear triggers.","linked_metric":"reversibility","priority":1,"rationale":"High migration cost makes reversibility harder without an exit plan."},{"action":"Prototype data migrations and validate rollback paths early.","linked_metric":"reversibility","priority":1,"rationale":"High-criticality data dependencies require careful exit validation."},{"action":"Limit initial deployment scope and monitor blast radius.","linked_metric":"blast_radius","priority":2,"rationale":"A large dependency surface increases potential impact."},{"action":"Stage architecture changes behind incremental rollouts.","linked_metric":"blast_radius","priority":2,"rationale":"Architecture changes outside local scope increase blast radius."},{"action":"Audit build/ops dependencies for criticality and substitution.","linked_metric":"dependency_weight","priority":3,"rationale":"Build and ops dependencies can be decoupled to reduce risk."},{"action":"Harden data dependency contracts and minimize tight coupling.","linked_metric":"dependency_weight","priority":3,"rationale":"High-criticality data dependencies elevate migration risk."},{"action":"Reduce or tier critical runtime dependencies where possible.","linked_metric":"dependency_weight","priority":3,"rationale":"Runtime dependencies can compound operational risk."},{"action":"Capture trade-offs across alternatives to preserve decision context.","linked_metric":"convergence","priority":4,"rationale":"Maintains convergence gains by documenting explored options."},{"action":"Summarize why rejected options were insufficient.","linked_metric":"convergence","priority":4,"rationale":"Detailed rationale strengthens convergence signals."}],"scores":{"blast_radius":5,"convergence":65,"dependency_weight":45,"overall_confidence":24,"reversibility":0},"sensitivity":{"assumption_impact":[{"assumption":"Operations team can manage broker upgrades","delta_convergence":-5,"delta_overall":-1,"description":"Assumption invalidation reduces convergence by 5.","index":0,"metric":"convergence","new_overall":23,"rule_id":"SENS-ASSUMP-001"}]},"version":"0.1"}
 ```
 
 ## Sample DecisionReport (Markdown)
@@ -126,18 +139,26 @@ Final: 65
 - [WARN] REV-LOCKIN: Reversibility appears low; exit strategy may be hard.
 
 ## Top Drivers
-- reversibility (R-REV-002): High migration cost reduces reversibility. (-15)
 - convergence (R-CONV-001): Considering at least three alternatives improves convergence. (15)
-- reversibility (R-REV-003): High-criticality data dependency reduces reversibility. (-10)
+- reversibility (R-REV-002): High migration cost reduces reversibility. (-15)
 - blast_radius (R-BLAST-001): Large number of dependencies increases blast radius risk. (-10)
 - blast_radius (R-BLAST-002): Architecture decisions beyond local scope increase blast radius. (-10)
+- convergence (R-CONV-002): Alternatives have detailed rationale, improving convergence. (10)
 - dependency_weight (R-DEP-001): High-criticality runtime dependencies reduce dependency score. (-10)
 
 ## Mitigations
 - P1: Define a rollback or escape plan with clear triggers. (reversibility)
+- P1: Prototype data migrations and validate rollback paths early. (reversibility)
 - P2: Limit initial deployment scope and monitor blast radius. (blast_radius)
-- P3: Reduce or tier critical dependencies where possible. (dependency_weight)
-- P4: Document rejected alternatives and revisit if assumptions change. (convergence)
+- P2: Stage architecture changes behind incremental rollouts. (blast_radius)
+- P3: Audit build/ops dependencies for criticality and substitution. (dependency_weight)
+- P3: Harden data dependency contracts and minimize tight coupling. (dependency_weight)
+- P3: Reduce or tier critical runtime dependencies where possible. (dependency_weight)
+- P4: Capture trade-offs across alternatives to preserve decision context. (convergence)
+- P4: Summarize why rejected options were insufficient. (convergence)
+
+## Confidence Sensitivity
+- Assumption 1: Operations team can manage broker upgrades → Δ overall -1 (new overall 23)
 
 ---
 Generated at 2025-02-01T00:00:00.000Z
@@ -148,8 +169,11 @@ Generated at 2025-02-01T00:00:00.000Z
 - ✅ Offline-first, no external APIs or telemetry.
 - ✅ JSON + markdown outputs for each decision.
 - ✅ Explainable scoring with rule IDs and contributions.
+- ✅ Rule registry and mitigation mapping in place.
+- ✅ Sensitivity analysis included in reports.
 - ✅ Single decision per run (v0.1 scope).
 - ✅ Required schema fields and validation enforced.
+- ✅ Fixture matrix (6×6) and adversarial invalid fixtures generated with summary table.
 - ✅ Deliverables: spec, scoring engine, report generator, CLI, tests, fixtures, README.
 
 ## Remaining TODOs (prioritized)

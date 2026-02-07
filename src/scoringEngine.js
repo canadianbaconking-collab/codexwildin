@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { RULES, MITIGATION_TEMPLATES, METRIC_FALLBACKS } = require('./rules');
 
 const DEFAULT_WEIGHTS = {
   overall: {
@@ -18,6 +19,83 @@ const BASE_SCORES = {
 };
 
 const clampScore = (value) => Math.max(0, Math.min(100, Math.round(value)));
+
+const calculateOverallScore = (metrics, weights) => {
+  const overall =
+    metrics.reversibility * weights.overall.reversibility +
+    metrics.blast_radius * weights.overall.blast_radius +
+    metrics.dependency_weight * weights.overall.dependency_weight +
+    metrics.convergence * weights.overall.convergence;
+
+  return clampScore(overall);
+};
+
+const buildOverallComponents = (metrics, weights) =>
+  [
+    {
+      metric: 'reversibility',
+      score: metrics.reversibility,
+      weight: weights.overall.reversibility,
+    },
+    {
+      metric: 'blast_radius',
+      score: metrics.blast_radius,
+      weight: weights.overall.blast_radius,
+    },
+    {
+      metric: 'dependency_weight',
+      score: metrics.dependency_weight,
+      weight: weights.overall.dependency_weight,
+    },
+    {
+      metric: 'convergence',
+      score: metrics.convergence,
+      weight: weights.overall.convergence,
+    },
+  ].map((component) => ({
+    ...component,
+    weighted: Number((component.score * component.weight).toFixed(2)),
+  }));
+
+const buildDerivedData = (decision) => ({
+  hasHighDataDependency: decision.dependencies_introduced.some(
+    (dep) => dep.kind === 'data' && dep.criticality === 'high'
+  ),
+  highRuntimeDeps: decision.dependencies_introduced.filter(
+    (dep) => dep.kind === 'runtime' && dep.criticality === 'high'
+  ).length,
+  highBuildOpsDeps: decision.dependencies_introduced.filter(
+    (dep) => (dep.kind === 'build' || dep.kind === 'ops') && dep.criticality === 'high'
+  ).length,
+  alternativesCount: decision.alternatives_considered.length,
+  allAlternativesDetailed: decision.alternatives_considered.every(
+    (alt) => alt.why_not && alt.why_not.trim().length > 20
+  ),
+});
+
+const buildMitigations = (drivers, metrics) => {
+  const mitigations = [];
+  const seen = new Set();
+
+  drivers.forEach((driver) => {
+    const template = MITIGATION_TEMPLATES[driver.rule_id];
+    if (!template) return;
+    if (seen.has(template.action)) return;
+    seen.add(template.action);
+    mitigations.push({ ...template });
+  });
+
+  Object.entries(METRIC_FALLBACKS).forEach(([metric, template]) => {
+    if (metrics[metric] > 40) return;
+    if (mitigations.some((item) => item.linked_metric === metric)) return;
+    mitigations.push({ ...template });
+  });
+
+  return mitigations.sort((a, b) => {
+    if (a.priority !== b.priority) return a.priority - b.priority;
+    return a.action.localeCompare(b.action);
+  });
+};
 
 const loadWeightsFromConfig = (configPath) => {
   if (!configPath) return null;
@@ -42,7 +120,6 @@ const evaluateDecision = (decision, options = {}) => {
   const weights = getWeights(options.weightsPath);
   const drivers = [];
   const flags = [];
-  const mitigations = [];
 
   const metricBases = {
     reversibility: BASE_SCORES.reversibility[decision.reversibility_estimate],
@@ -52,6 +129,8 @@ const evaluateDecision = (decision, options = {}) => {
   };
 
   const metrics = { ...metricBases };
+  const derived = buildDerivedData(decision);
+  const rules = options.rules || RULES;
   const explainability = Object.fromEntries(
     Object.entries(metricBases).map(([metric, base]) => [
       metric,
@@ -70,94 +149,10 @@ const evaluateDecision = (decision, options = {}) => {
     metrics[metric] += contribution;
   };
 
-  // Reversibility rules
-  addDriver(
-    'reversibility',
-    'R-REV-001',
-    'Scope impact is local, increasing reversibility.',
-    decision.scope_impact === 'local' ? 10 : 0
-  );
-  addDriver(
-    'reversibility',
-    'R-REV-002',
-    'High migration cost reduces reversibility.',
-    decision.migration_cost_estimate === 'high' ? -15 : 0
-  );
-  const hasHighDataDependency = decision.dependencies_introduced.some(
-    (dep) => dep.kind === 'data' && dep.criticality === 'high'
-  );
-  addDriver(
-    'reversibility',
-    'R-REV-003',
-    'High-criticality data dependency reduces reversibility.',
-    hasHighDataDependency ? -10 : 0
-  );
-
-  // Blast radius rules
-  addDriver(
-    'blast_radius',
-    'R-BLAST-001',
-    'Large number of dependencies increases blast radius risk.',
-    decision.dependencies_introduced.length >= 4 ? -10 : 0
-  );
-  addDriver(
-    'blast_radius',
-    'R-BLAST-002',
-    'Architecture decisions beyond local scope increase blast radius.',
-    decision.decision_type === 'architecture' && decision.scope_impact !== 'local' ? -10 : 0
-  );
-
-  // Dependency weight rules
-  const highRuntimeDeps = decision.dependencies_introduced.filter(
-    (dep) => dep.kind === 'runtime' && dep.criticality === 'high'
-  ).length;
-  const runtimePenalty = Math.max(highRuntimeDeps * -10, -30);
-  addDriver(
-    'dependency_weight',
-    'R-DEP-001',
-    'High-criticality runtime dependencies reduce dependency score.',
-    runtimePenalty
-  );
-  const highBuildOpsDeps = decision.dependencies_introduced.filter(
-    (dep) => (dep.kind === 'build' || dep.kind === 'ops') && dep.criticality === 'high'
-  ).length;
-  const buildOpsPenalty = Math.max(highBuildOpsDeps * -5, -15);
-  addDriver(
-    'dependency_weight',
-    'R-DEP-002',
-    'High-criticality build/ops dependencies reduce dependency score.',
-    buildOpsPenalty
-  );
-  addDriver(
-    'dependency_weight',
-    'R-DEP-003',
-    'High-criticality data dependencies reduce dependency score.',
-    hasHighDataDependency ? -10 : 0
-  );
-
-  // Convergence rules
-  const alternativesCount = decision.alternatives_considered.length;
-  addDriver(
-    'convergence',
-    'R-CONV-001',
-    'Considering at least three alternatives improves convergence.',
-    alternativesCount >= 3 ? 15 : 0
-  );
-  const allAlternativesDetailed = decision.alternatives_considered.every(
-    (alt) => alt.why_not && alt.why_not.trim().length > 20
-  );
-  addDriver(
-    'convergence',
-    'R-CONV-002',
-    'Alternatives have detailed rationale, improving convergence.',
-    allAlternativesDetailed ? 10 : 0
-  );
-  addDriver(
-    'convergence',
-    'R-CONV-003',
-    'Only one alternative for non-local scope reduces convergence.',
-    alternativesCount === 1 && decision.scope_impact !== 'local' ? -10 : 0
-  );
+  rules.forEach((rule) => {
+    const contribution = rule.apply({ decision, derived });
+    addDriver(rule.metric, rule.id, rule.description, contribution);
+  });
 
   metrics.reversibility = clampScore(metrics.reversibility);
   metrics.blast_radius = clampScore(metrics.blast_radius);
@@ -168,13 +163,7 @@ const evaluateDecision = (decision, options = {}) => {
     explainability[metric].final = metrics[metric];
   });
 
-  const overall =
-    metrics.reversibility * weights.overall.reversibility +
-    metrics.blast_radius * weights.overall.blast_radius +
-    metrics.dependency_weight * weights.overall.dependency_weight +
-    metrics.convergence * weights.overall.convergence;
-
-  const overallScore = clampScore(overall);
+  const overallScore = calculateOverallScore(metrics, weights);
 
   const classification =
     overallScore >= 70 ? 'stable' : overallScore >= 45 ? 'tentative' : 'risky';
@@ -208,60 +197,8 @@ const evaluateDecision = (decision, options = {}) => {
     });
   }
 
-  const mitigationBase = [
-    {
-      priority: 1,
-      action: 'Define a rollback or escape plan with clear triggers.',
-      rationale: 'Improves reversibility and reduces lock-in risk.',
-      linked_metric: 'reversibility',
-    },
-    {
-      priority: 2,
-      action: 'Limit initial deployment scope and monitor blast radius.',
-      rationale: 'Reduces impact if issues arise.',
-      linked_metric: 'blast_radius',
-    },
-    {
-      priority: 3,
-      action: 'Reduce or tier critical dependencies where possible.',
-      rationale: 'Improves dependency weight score.',
-      linked_metric: 'dependency_weight',
-    },
-    {
-      priority: 4,
-      action: 'Document rejected alternatives and revisit if assumptions change.',
-      rationale: 'Improves convergence and decision traceability.',
-      linked_metric: 'convergence',
-    },
-  ];
-
-  mitigations.push(...mitigationBase);
-
-  const overallComponents = [
-    {
-      metric: 'reversibility',
-      score: metrics.reversibility,
-      weight: weights.overall.reversibility,
-    },
-    {
-      metric: 'blast_radius',
-      score: metrics.blast_radius,
-      weight: weights.overall.blast_radius,
-    },
-    {
-      metric: 'dependency_weight',
-      score: metrics.dependency_weight,
-      weight: weights.overall.dependency_weight,
-    },
-    {
-      metric: 'convergence',
-      score: metrics.convergence,
-      weight: weights.overall.convergence,
-    },
-  ].map((component) => ({
-    ...component,
-    weighted: Number((component.score * component.weight).toFixed(2)),
-  }));
+  const mitigations = buildMitigations(drivers, metrics);
+  const overallComponents = buildOverallComponents(metrics, weights);
 
   return {
     scores: {
@@ -291,4 +228,6 @@ module.exports = {
   evaluateDecision,
   getWeights,
   clampScore,
+  calculateOverallScore,
+  buildOverallComponents,
 };

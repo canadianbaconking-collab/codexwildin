@@ -1,0 +1,31 @@
+{
+  "id": "dec-bad-dep",
+  "title": "Bad dependency",
+  "date": "2025-01-01T00:00:00.000Z",
+  "decision_type": "tooling",
+  "context": "Context.",
+  "motivation": "Motivation.",
+  "alternatives_considered": [
+    {
+      "name": "Alt",
+      "why_not": "Detailed enough for testing."
+    }
+  ],
+  "dependencies_introduced": [
+    {
+      "name": "",
+      "kind": "unknown",
+      "criticality": "critical"
+    }
+  ],
+  "scope_impact": "local",
+  "reversibility_estimate": "easy",
+  "migration_cost_estimate": "low",
+  "time_horizon": "days",
+  "constraints": [
+    "None"
+  ],
+  "assumptions": [
+    "None"
+  ]
+}

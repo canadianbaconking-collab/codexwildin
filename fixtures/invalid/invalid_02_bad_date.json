@@ -1,0 +1,25 @@
+{
+  "id": "dec-bad-date",
+  "title": "Bad date",
+  "date": "2025-01-01",
+  "decision_type": "tooling",
+  "context": "Context.",
+  "motivation": "Motivation.",
+  "alternatives_considered": [
+    {
+      "name": "Alt",
+      "why_not": "Too short."
+    }
+  ],
+  "dependencies_introduced": [],
+  "scope_impact": "local",
+  "reversibility_estimate": "easy",
+  "migration_cost_estimate": "low",
+  "time_horizon": "days",
+  "constraints": [
+    "None"
+  ],
+  "assumptions": [
+    "None"
+  ]
+}
