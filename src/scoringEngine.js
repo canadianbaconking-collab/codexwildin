@@ -44,16 +44,29 @@ const evaluateDecision = (decision, options = {}) => {
   const flags = [];
   const mitigations = [];
 
-  const metrics = {
+  const metricBases = {
     reversibility: BASE_SCORES.reversibility[decision.reversibility_estimate],
     blast_radius: BASE_SCORES.blast_radius[decision.scope_impact],
     dependency_weight: BASE_SCORES.dependency_weight,
     convergence: BASE_SCORES.convergence,
   };
 
+  const metrics = { ...metricBases };
+  const explainability = Object.fromEntries(
+    Object.entries(metricBases).map(([metric, base]) => [
+      metric,
+      { base, adjustments: [], final: base },
+    ])
+  );
+
   const addDriver = (metric, ruleId, description, contribution) => {
     if (contribution === 0) return;
     drivers.push({ metric, rule_id: ruleId, description, contribution });
+    explainability[metric].adjustments.push({
+      rule_id: ruleId,
+      description,
+      contribution,
+    });
     metrics[metric] += contribution;
   };
 
@@ -151,6 +164,10 @@ const evaluateDecision = (decision, options = {}) => {
   metrics.dependency_weight = clampScore(metrics.dependency_weight);
   metrics.convergence = clampScore(metrics.convergence);
 
+  Object.keys(metrics).forEach((metric) => {
+    explainability[metric].final = metrics[metric];
+  });
+
   const overall =
     metrics.reversibility * weights.overall.reversibility +
     metrics.blast_radius * weights.overall.blast_radius +
@@ -220,6 +237,32 @@ const evaluateDecision = (decision, options = {}) => {
 
   mitigations.push(...mitigationBase);
 
+  const overallComponents = [
+    {
+      metric: 'reversibility',
+      score: metrics.reversibility,
+      weight: weights.overall.reversibility,
+    },
+    {
+      metric: 'blast_radius',
+      score: metrics.blast_radius,
+      weight: weights.overall.blast_radius,
+    },
+    {
+      metric: 'dependency_weight',
+      score: metrics.dependency_weight,
+      weight: weights.overall.dependency_weight,
+    },
+    {
+      metric: 'convergence',
+      score: metrics.convergence,
+      weight: weights.overall.convergence,
+    },
+  ].map((component) => ({
+    ...component,
+    weighted: Number((component.score * component.weight).toFixed(2)),
+  }));
+
   return {
     scores: {
       overall_confidence: overallScore,
@@ -233,6 +276,14 @@ const evaluateDecision = (decision, options = {}) => {
     mitigations,
     classification,
     weights,
+    explainability: {
+      metrics: explainability,
+      overall: {
+        weights: weights.overall,
+        components: overallComponents,
+        final: overallScore,
+      },
+    },
   };
 };
 

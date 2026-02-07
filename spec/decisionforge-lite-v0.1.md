@@ -49,6 +49,19 @@ Notes:
   "drivers": [{ "metric": "string", "rule_id": "string", "description": "string", "contribution": 0 }],
   "mitigations": [{ "priority": 1, "action": "string", "rationale": "string", "linked_metric": "string" }],
   "classification": "stable | tentative | risky",
+  "explainability": {
+    "metrics": {
+      "reversibility": { "base": 0, "adjustments": [{ "rule_id": "string", "description": "string", "contribution": 0 }], "final": 0 },
+      "blast_radius": { "base": 0, "adjustments": [{ "rule_id": "string", "description": "string", "contribution": 0 }], "final": 0 },
+      "dependency_weight": { "base": 0, "adjustments": [{ "rule_id": "string", "description": "string", "contribution": 0 }], "final": 0 },
+      "convergence": { "base": 0, "adjustments": [{ "rule_id": "string", "description": "string", "contribution": 0 }], "final": 0 }
+    },
+    "overall": {
+      "weights": { "reversibility": 0, "blast_radius": 0, "dependency_weight": 0, "convergence": 0 },
+      "components": [{ "metric": "string", "score": 0, "weight": 0, "weighted": 0 }],
+      "final": 0
+    }
+  },
   "version": "0.1",
   "generated_at": "ISO string"
 }
@@ -111,3 +124,11 @@ Weights can be overridden via configuration in `config/weights.json` (optional):
 - No multi-decision history beyond a stub.
 - No non-deterministic or “AI” advice.
 - No project management or journaling features.
+
+## Deterministic validation
+Inputs are validated deterministically before scoring. Invalid inputs produce a structured error list in a stable order and terminate the CLI with a non-zero exit code.
+
+## CLI flags
+- `--out-dir <dir>`: output directory for reports.
+- `--weights <path>`: optional weights override JSON file.
+- `--generated-at <iso>`: inject a deterministic timestamp for report generation.
