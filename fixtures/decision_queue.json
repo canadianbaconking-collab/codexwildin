@@ -1,0 +1,35 @@
+{
+  "id": "dec-queue-003",
+  "title": "Introduce RabbitMQ for async processing",
+  "date": "2025-01-15T09:00:00.000Z",
+  "decision_type": "architecture",
+  "context": "Background jobs are currently handled inline, impacting request latency. Scaling demands require async workflows.",
+  "motivation": "Decouple long-running tasks and improve user-facing performance.",
+  "alternatives_considered": [
+    {
+      "name": "Continue inline processing",
+      "why_not": "Latency spikes are unacceptable and impact customer experience."
+    },
+    {
+      "name": "Use managed cloud queue",
+      "why_not": "Offline-first constraint and data residency restrictions disallow managed services."
+    },
+    {
+      "name": "RabbitMQ",
+      "why_not": "Selected option; on-prem friendly and fits delivery guarantees."
+    }
+  ],
+  "dependencies_introduced": [
+    { "name": "RabbitMQ", "kind": "ops", "criticality": "high" },
+    { "name": "AMQP Client", "kind": "runtime", "criticality": "high" },
+    { "name": "Message Schema", "kind": "data", "criticality": "high" },
+    { "name": "Queue Monitoring", "kind": "ops", "criticality": "med" }
+  ],
+  "scope_impact": "systemwide",
+  "reversibility_estimate": "hard",
+  "migration_cost_estimate": "high",
+  "time_horizon": "years",
+  "constraints": ["Must operate in air-gapped deployments"],
+  "assumptions": ["Operations team can manage broker upgrades"],
+  "notes": "Pilot with billing and notifications first."
+}

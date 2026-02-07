@@ -1,0 +1,27 @@
+{
+  "id": "dec-refactor-005",
+  "title": "Refactor monolith into modular services",
+  "date": "2025-01-25T16:45:00.000Z",
+  "decision_type": "architecture",
+  "context": "The monolith is slowing delivery due to tightly coupled components and deployment bottlenecks.",
+  "motivation": "Enable parallel development and reduce release risk.",
+  "alternatives_considered": [
+    {
+      "name": "Stay monolithic",
+      "why_not": "Continues to block teams and increases release complexity."
+    }
+  ],
+  "dependencies_introduced": [
+    { "name": "Service Mesh", "kind": "ops", "criticality": "high" },
+    { "name": "Shared Auth Service", "kind": "runtime", "criticality": "high" },
+    { "name": "Event Bus", "kind": "runtime", "criticality": "high" },
+    { "name": "Contract Registry", "kind": "data", "criticality": "high" }
+  ],
+  "scope_impact": "systemwide",
+  "reversibility_estimate": "hard",
+  "migration_cost_estimate": "high",
+  "time_horizon": "years",
+  "constraints": ["No downtime acceptable during migration"],
+  "assumptions": ["Service boundaries can be defined in 4 weeks"],
+  "notes": "Requires dedicated enablement team."
+}
