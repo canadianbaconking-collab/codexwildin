@@ -1,0 +1,29 @@
+{
+  "id": "dec-framework-002",
+  "title": "Switch web framework from Express to Fastify",
+  "date": "2025-01-12T14:30:00.000Z",
+  "decision_type": "framework",
+  "context": "API response times are inconsistent and we need better observability hooks. Current middleware stack is fragile.",
+  "motivation": "Improve performance and consistency while keeping developer ergonomics.",
+  "alternatives_considered": [
+    {
+      "name": "Stay on Express",
+      "why_not": "Performance issues persist and plugins are not standardized across services."
+    },
+    {
+      "name": "Migrate to Fastify",
+      "why_not": "Selected option; meets performance and schema validation needs."
+    }
+  ],
+  "dependencies_introduced": [
+    { "name": "Fastify", "kind": "runtime", "criticality": "high" },
+    { "name": "Fastify Plugins", "kind": "runtime", "criticality": "med" }
+  ],
+  "scope_impact": "subsystem",
+  "reversibility_estimate": "moderate",
+  "migration_cost_estimate": "high",
+  "time_horizon": "months",
+  "constraints": ["Must preserve existing route contracts"],
+  "assumptions": ["Platform team can update shared middleware"],
+  "notes": "Start with greenfield services before core APIs."
+}

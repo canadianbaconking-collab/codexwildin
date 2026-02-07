@@ -1,0 +1,29 @@
+{
+  "id": "dec-migrate-004",
+  "title": "Adopt blue-green database migration approach",
+  "date": "2025-01-20T11:15:00.000Z",
+  "decision_type": "data_model",
+  "context": "Schema changes have caused downtime during releases. We need a safer path for migrations.",
+  "motivation": "Reduce deployment risk and improve rollback capability.",
+  "alternatives_considered": [
+    {
+      "name": "Continue in-place migrations",
+      "why_not": "Downtime during releases is unacceptable for enterprise customers."
+    },
+    {
+      "name": "Blue-green migrations",
+      "why_not": "Selected option; provides safe cutover with data validation steps."
+    }
+  ],
+  "dependencies_introduced": [
+    { "name": "Migration Orchestrator", "kind": "build", "criticality": "med" },
+    { "name": "Shadow Tables", "kind": "data", "criticality": "high" }
+  ],
+  "scope_impact": "systemwide",
+  "reversibility_estimate": "moderate",
+  "migration_cost_estimate": "high",
+  "time_horizon": "months",
+  "constraints": ["Must preserve data integrity"],
+  "assumptions": ["DB capacity can handle duplicate tables"],
+  "notes": "Initial rollout on reporting database."
+}
