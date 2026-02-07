@@ -1,17 +1,17 @@
 # Decision Confidence Thermometer
 
-## Introduce RabbitMQ for async processing
+## Matrix systemwide-b / hard-a
 
-**Decision ID:** dec-queue-003
-**Date:** 2025-01-15T09:00:00.000Z
+**Decision ID:** dec-matrix-systemwide-b-hard-a
+**Date:** 2025-01-10T00:00:00.000Z
 **Type:** architecture
 **Scope:** systemwide
 
 ## Scores
-- Overall Confidence: 24
+- Overall Confidence: 21
 - Reversibility: 0
 - Blast Radius: 5
-- Dependency Weight: 45
+- Dependency Weight: 30
 - Convergence: 65
 
 ## Classification
@@ -35,10 +35,10 @@ Final: 5
 ### dependency_weight
 Base: 70
 Adjustments:
-  - R-DEP-001: High-criticality runtime dependencies reduce dependency score. (-10)
-  - R-DEP-002: High-criticality build/ops dependencies reduce dependency score. (-5)
+  - R-DEP-001: High-criticality runtime dependencies reduce dependency score. (-20)
+  - R-DEP-002: High-criticality build/ops dependencies reduce dependency score. (-10)
   - R-DEP-003: High-criticality data dependencies reduce dependency score. (-10)
-Final: 45
+Final: 30
 
 ### convergence
 Base: 40
@@ -50,20 +50,21 @@ Final: 65
 **Overall calculation**
 - reversibility: 0 × 0.3 = 0
 - blast_radius: 5 × 0.3 = 1.5
-- dependency_weight: 45 × 0.2 = 9
+- dependency_weight: 30 × 0.2 = 6
 - convergence: 65 × 0.2 = 13
 
 ## Flags
 - [RISK] BLAST-RISK: Blast radius score is low; impact could be wide.
 - [WARN] REV-LOCKIN: Reversibility appears low; exit strategy may be hard.
+- [WARN] DEP-HEAVY: Dependency weight is high; consider reducing critical dependencies.
 
 ## Top Drivers
+- dependency_weight (R-DEP-001): High-criticality runtime dependencies reduce dependency score. (-20)
 - convergence (R-CONV-001): Considering at least three alternatives improves convergence. (15)
 - reversibility (R-REV-002): High migration cost reduces reversibility. (-15)
 - blast_radius (R-BLAST-001): Large number of dependencies increases blast radius risk. (-10)
 - blast_radius (R-BLAST-002): Architecture decisions beyond local scope increase blast radius. (-10)
 - convergence (R-CONV-002): Alternatives have detailed rationale, improving convergence. (10)
-- dependency_weight (R-DEP-001): High-criticality runtime dependencies reduce dependency score. (-10)
 
 ## Mitigations
 - P1: Define a rollback or escape plan with clear triggers. (reversibility)
@@ -77,7 +78,8 @@ Final: 65
 - P4: Summarize why rejected options were insufficient. (convergence)
 
 ## Confidence Sensitivity
-- Assumption 1: Operations team can manage broker upgrades → Δ overall -1 (new overall 23)
+- Assumption 1: Team capacity is stable → Δ overall -1 (new overall 20)
+- Assumption 2: Latency budget remains unchanged → Δ overall -1 (new overall 20)
 
 ---
 Generated at 2025-02-01T00:00:00.000Z

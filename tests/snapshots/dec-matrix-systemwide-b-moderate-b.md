@@ -1,29 +1,29 @@
 # Decision Confidence Thermometer
 
-## Introduce RabbitMQ for async processing
+## Matrix systemwide-b / moderate-b
 
-**Decision ID:** dec-queue-003
-**Date:** 2025-01-15T09:00:00.000Z
+**Decision ID:** dec-matrix-systemwide-b-moderate-b
+**Date:** 2025-01-10T00:00:00.000Z
 **Type:** architecture
 **Scope:** systemwide
 
 ## Scores
-- Overall Confidence: 24
-- Reversibility: 0
+- Overall Confidence: 23
+- Reversibility: 30
 - Blast Radius: 5
-- Dependency Weight: 45
-- Convergence: 65
+- Dependency Weight: 30
+- Convergence: 30
 
 ## Classification
 RISKY
 
 ## Explainability
 ### reversibility
-Base: 25
+Base: 55
 Adjustments:
   - R-REV-002: High migration cost reduces reversibility. (-15)
   - R-REV-003: High-criticality data dependency reduces reversibility. (-10)
-Final: 0
+Final: 30
 
 ### blast_radius
 Base: 25
@@ -35,35 +35,36 @@ Final: 5
 ### dependency_weight
 Base: 70
 Adjustments:
-  - R-DEP-001: High-criticality runtime dependencies reduce dependency score. (-10)
-  - R-DEP-002: High-criticality build/ops dependencies reduce dependency score. (-5)
+  - R-DEP-001: High-criticality runtime dependencies reduce dependency score. (-20)
+  - R-DEP-002: High-criticality build/ops dependencies reduce dependency score. (-10)
   - R-DEP-003: High-criticality data dependencies reduce dependency score. (-10)
-Final: 45
+Final: 30
 
 ### convergence
 Base: 40
 Adjustments:
-  - R-CONV-001: Considering at least three alternatives improves convergence. (15)
-  - R-CONV-002: Alternatives have detailed rationale, improving convergence. (10)
-Final: 65
+  - R-CONV-003: Only one alternative for non-local scope reduces convergence. (-10)
+Final: 30
 
 **Overall calculation**
-- reversibility: 0 × 0.3 = 0
+- reversibility: 30 × 0.3 = 9
 - blast_radius: 5 × 0.3 = 1.5
-- dependency_weight: 45 × 0.2 = 9
-- convergence: 65 × 0.2 = 13
+- dependency_weight: 30 × 0.2 = 6
+- convergence: 30 × 0.2 = 6
 
 ## Flags
 - [RISK] BLAST-RISK: Blast radius score is low; impact could be wide.
 - [WARN] REV-LOCKIN: Reversibility appears low; exit strategy may be hard.
+- [WARN] DEP-HEAVY: Dependency weight is high; consider reducing critical dependencies.
+- [INFO] CONV-LOW: Convergence is low; decision may need more exploration.
 
 ## Top Drivers
-- convergence (R-CONV-001): Considering at least three alternatives improves convergence. (15)
+- dependency_weight (R-DEP-001): High-criticality runtime dependencies reduce dependency score. (-20)
 - reversibility (R-REV-002): High migration cost reduces reversibility. (-15)
 - blast_radius (R-BLAST-001): Large number of dependencies increases blast radius risk. (-10)
 - blast_radius (R-BLAST-002): Architecture decisions beyond local scope increase blast radius. (-10)
-- convergence (R-CONV-002): Alternatives have detailed rationale, improving convergence. (10)
-- dependency_weight (R-DEP-001): High-criticality runtime dependencies reduce dependency score. (-10)
+- convergence (R-CONV-003): Only one alternative for non-local scope reduces convergence. (-10)
+- dependency_weight (R-DEP-002): High-criticality build/ops dependencies reduce dependency score. (-10)
 
 ## Mitigations
 - P1: Define a rollback or escape plan with clear triggers. (reversibility)
@@ -73,11 +74,11 @@ Final: 65
 - P3: Audit build/ops dependencies for criticality and substitution. (dependency_weight)
 - P3: Harden data dependency contracts and minimize tight coupling. (dependency_weight)
 - P3: Reduce or tier critical runtime dependencies where possible. (dependency_weight)
-- P4: Capture trade-offs across alternatives to preserve decision context. (convergence)
-- P4: Summarize why rejected options were insufficient. (convergence)
+- P4: Re-open the alternatives list for non-local decisions. (convergence)
 
 ## Confidence Sensitivity
-- Assumption 1: Operations team can manage broker upgrades → Δ overall -1 (new overall 23)
+- Assumption 1: Team capacity is stable → Δ overall -1 (new overall 22)
+- Assumption 2: Latency budget remains unchanged → Δ overall -1 (new overall 22)
 
 ---
 Generated at 2025-02-01T00:00:00.000Z

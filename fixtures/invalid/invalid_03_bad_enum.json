@@ -1,0 +1,25 @@
+{
+  "id": "dec-bad-enum",
+  "title": "Bad enum",
+  "date": "2025-01-01T00:00:00.000Z",
+  "decision_type": "invalid",
+  "context": "Context.",
+  "motivation": "Motivation.",
+  "alternatives_considered": [
+    {
+      "name": "Alt",
+      "why_not": "Detailed enough for testing."
+    }
+  ],
+  "dependencies_introduced": [],
+  "scope_impact": "global",
+  "reversibility_estimate": "maybe",
+  "migration_cost_estimate": "low",
+  "time_horizon": "days",
+  "constraints": [
+    "None"
+  ],
+  "assumptions": [
+    "None"
+  ]
+}

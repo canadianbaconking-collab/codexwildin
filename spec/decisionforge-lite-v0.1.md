@@ -62,6 +62,20 @@ Notes:
       "final": 0
     }
   },
+  "sensitivity": {
+    "assumption_impact": [
+      {
+        "index": 0,
+        "assumption": "string",
+        "metric": "convergence",
+        "delta_convergence": -5,
+        "delta_overall": 0,
+        "new_overall": 0,
+        "rule_id": "SENS-ASSUMP-001",
+        "description": "string"
+      }
+    ]
+  },
   "version": "0.1",
   "generated_at": "ISO string"
 }
@@ -88,6 +102,15 @@ All rules are deterministic and produce additive contributions. Metrics are clam
 - **R-CONV-001**: +15 if `alternatives_considered >= 3`.
 - **R-CONV-002**: +10 if all alternatives have `why_not` length > 20.
 - **R-CONV-003**: -10 if only 1 alternative and `scope_impact` is subsystem/systemwide.
+
+### Rule registry
+Rules are defined in a registry (`src/rules.js`) so additional rules can be plugged in without altering the scoring engine core. Each rule declares its metric, description, and deterministic contribution.
+
+### Mitigation mapping
+Mitigations are derived from triggered rule IDs with deterministic fallbacks when a metric remains low.
+
+### Confidence sensitivity
+The report includes a deterministic sensitivity analysis that models the effect of invalidating one assumption at a time (`SENS-ASSUMP-001`). Each assumption reduces convergence by 5 points to expose overall confidence deltas.
 
 ### Overall confidence
 Weighted sum:

@@ -1,17 +1,17 @@
 # Decision Confidence Thermometer
 
-## Adopt Prisma ORM for core services
+## Matrix local-a / hard-a
 
-**Decision ID:** dec-orm-001
-**Date:** 2025-01-10T10:00:00.000Z
-**Type:** library
-**Scope:** subsystem
+**Decision ID:** dec-matrix-local-a-hard-a
+**Date:** 2025-01-10T00:00:00.000Z
+**Type:** tooling
+**Scope:** local
 
 ## Scores
-- Overall Confidence: 58
-- Reversibility: 55
-- Blast Radius: 55
-- Dependency Weight: 60
+- Overall Confidence: 62
+- Reversibility: 35
+- Blast Radius: 80
+- Dependency Weight: 70
 - Convergence: 65
 
 ## Classification
@@ -19,22 +19,22 @@ TENTATIVE
 
 ## Explainability
 ### reversibility
-Base: 55
+Base: 25
 Adjustments:
-  - None
-Final: 55
+  - R-REV-001: Scope impact is local, increasing reversibility. (10)
+Final: 35
 
 ### blast_radius
-Base: 55
+Base: 80
 Adjustments:
   - None
-Final: 55
+Final: 80
 
 ### dependency_weight
 Base: 70
 Adjustments:
-  - R-DEP-001: High-criticality runtime dependencies reduce dependency score. (-10)
-Final: 60
+  - None
+Final: 70
 
 ### convergence
 Base: 40
@@ -44,27 +44,27 @@ Adjustments:
 Final: 65
 
 **Overall calculation**
-- reversibility: 55 × 0.3 = 16.5
-- blast_radius: 55 × 0.3 = 16.5
-- dependency_weight: 60 × 0.2 = 12
+- reversibility: 35 × 0.3 = 10.5
+- blast_radius: 80 × 0.3 = 24
+- dependency_weight: 70 × 0.2 = 14
 - convergence: 65 × 0.2 = 13
 
 ## Flags
-None
+- [WARN] REV-LOCKIN: Reversibility appears low; exit strategy may be hard.
 
 ## Top Drivers
 - convergence (R-CONV-001): Considering at least three alternatives improves convergence. (15)
 - convergence (R-CONV-002): Alternatives have detailed rationale, improving convergence. (10)
-- dependency_weight (R-DEP-001): High-criticality runtime dependencies reduce dependency score. (-10)
+- reversibility (R-REV-001): Scope impact is local, increasing reversibility. (10)
 
 ## Mitigations
-- P3: Reduce or tier critical runtime dependencies where possible. (dependency_weight)
+- P1: Define a rollback or escape plan with clear triggers. (reversibility)
 - P4: Capture trade-offs across alternatives to preserve decision context. (convergence)
 - P4: Summarize why rejected options were insufficient. (convergence)
 
 ## Confidence Sensitivity
-- Assumption 1: Team is comfortable with generated clients → Δ overall -1 (new overall 57)
-- Assumption 2: DB schema is stable → Δ overall -1 (new overall 57)
+- Assumption 1: Team capacity is stable → Δ overall -1 (new overall 61)
+- Assumption 2: Latency budget remains unchanged → Δ overall -1 (new overall 61)
 
 ---
 Generated at 2025-02-01T00:00:00.000Z
